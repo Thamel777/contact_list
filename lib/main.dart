@@ -114,6 +114,65 @@ class _ContactsPageState extends State<ContactsPage> {
     );
   }
 
+  Future<void> _showEditContactDialog(Contact contact) async {
+    final nameController = TextEditingController(text: contact.name);
+    final phoneController = TextEditingController(text: contact.phone);
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Contact'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+                validator: (value) =>
+                    (value == null || value.trim().isEmpty) ? 'Enter a name' : null,
+              ),
+              TextFormField(
+                controller: phoneController,
+                decoration: const InputDecoration(labelText: 'Phone number'),
+                keyboardType: TextInputType.phone,
+                validator: (value) => (value == null || value.trim().isEmpty)
+                    ? 'Enter a phone number'
+                    : null,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) {
+                return;
+              }
+
+              final navigator = Navigator.of(context);
+              await widget.repository.updateContact(
+                id: contact.id,
+                name: nameController.text.trim(),
+                phone: phoneController.text.trim(),
+              );
+
+              if (!mounted) return;
+              navigator.pop();
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -145,9 +204,19 @@ class _ContactsPageState extends State<ContactsPage> {
               return ListTile(
                 title: Text(contact.name),
                 subtitle: Text(contact.phone),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => widget.repository.deleteContact(contact.id),
+                onTap: () => _showEditContactDialog(contact),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      onPressed: () => _showEditContactDialog(contact),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () => widget.repository.deleteContact(contact.id),
+                    ),
+                  ],
                 ),
               );
             },

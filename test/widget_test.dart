@@ -101,6 +101,14 @@ class FakeContactsRepository implements ContactsRepository {
     _emit();
   }
 
+  @override
+  Future<void> updateContact({required String id, required String name, required String phone}) async {
+    final index = _contacts.indexWhere((c) => c.id == id);
+    if (index == -1) return;
+    _contacts[index] = Contact(id: id, name: name, phone: phone);
+    _emit();
+  }
+
   void _emit() {
     if (!_controller.isClosed) {
       _controller.add(List<Contact>.unmodifiable(_contacts));

@@ -18,6 +18,8 @@ abstract class ContactsRepository {
   Future<void> addContact({required String name, required String phone});
 
   Future<void> deleteContact(String id);
+  
+  Future<void> updateContact({required String id, required String name, required String phone});
 }
 
 class FirestoreContactsRepository implements ContactsRepository {
@@ -57,6 +59,16 @@ class FirestoreContactsRepository implements ContactsRepository {
   @override
   Future<void> deleteContact(String id) {
     return _collection.doc(id).delete();
+  }
+
+  @override
+  Future<void> updateContact({required String id, required String name, required String phone}) async {
+    return _collection.doc(id).update({
+      'name': name,
+      'phone': phone,
+      // keep created_at as-is; optionally update an updated_at timestamp
+      'updated_at': FieldValue.serverTimestamp(),
+    });
   }
 
   static String _valueOrFallback(String? value, String fallback) {
